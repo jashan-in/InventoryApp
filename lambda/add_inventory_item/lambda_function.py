@@ -1,38 +1,30 @@
-import boto3
 import json
+import uuid
 from decimal import Decimal
-import ulid
-
-dynamodb = boto3.resource("dynamodb")
-table = dynamodb.Table("Inventory")
 
 def lambda_handler(event, context):
     try:
-        body = json.loads(event["body"])
+        body = json.loads(event["body"], parse_float=Decimal)
 
-        required = ["item_name", "item_description", "item_qty_on_hand", "item_price", "item_location_id"]
-        if not all(field in body for field in required):
+        required_fields = ["item_name", "item_description", "item_qty_on_hand", "item_price", "item_location_id"]
+        if not all(field in body for field in required_fields):
             return {
                 "statusCode": 400,
                 "body": json.dumps({"error": "Missing required fields"})
             }
 
-        # Convert all numeric fields to Decimal
-        item_qty = Decimal(str(body["item_qty_on_hand"]))
-        item_price = Decimal(str(body["item_price"]))
-        item_loc = Decimal(str(body["item_location_id"]))
-
-        item_id = str(ulid.new())
+        item_id = str(uuid.uuid4())  # REPLACE ulid with UUID
 
         item = {
             "item_id": item_id,
             "item_name": body["item_name"],
             "item_description": body["item_description"],
-            "item_qty_on_hand": item_qty,
-            "item_price": item_price,
-            "item_location_id": item_loc
+            "item_qty_on_hand": int(body["item_qty_on_hand"]),
+            "item_price": Decimal(str(body["item_price"])),
+            "item_location_id": int(body["item_location_id"])
         }
 
+        # Save to DynamoDB
         table.put_item(Item=item)
 
         return {
