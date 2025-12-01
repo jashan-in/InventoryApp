@@ -1,6 +1,10 @@
+import boto3
 import json
 import uuid
 from decimal import Decimal
+
+dynamodb = boto3.resource("dynamodb")
+table = dynamodb.Table("Inventory")  # DynamoDB table name
 
 def lambda_handler(event, context):
     try:
@@ -13,7 +17,7 @@ def lambda_handler(event, context):
                 "body": json.dumps({"error": "Missing required fields"})
             }
 
-        item_id = str(uuid.uuid4())  # REPLACE ulid with UUID
+        item_id = str(uuid.uuid4())
 
         item = {
             "item_id": item_id,
@@ -24,7 +28,6 @@ def lambda_handler(event, context):
             "item_location_id": int(body["item_location_id"])
         }
 
-        # Save to DynamoDB
         table.put_item(Item=item)
 
         return {
