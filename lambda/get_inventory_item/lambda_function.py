@@ -1,5 +1,12 @@
 import json
 import boto3
+import json
+from decimal import Decimal
+
+def decimal_converter(o):
+    if isinstance(o, Decimal):
+        return float(o)
+
 
 dynamodb = boto3.resource("dynamodb")
 table = dynamodb.Table("Inventory")
