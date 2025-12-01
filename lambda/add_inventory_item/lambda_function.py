@@ -1,6 +1,6 @@
 import json
 import boto3
-from ulid import ULID
+import uuid
 
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table('Inventory')
@@ -23,10 +23,10 @@ def lambda_handler(event, context):
                 "body": json.dumps({"error": "Missing required fields"})
             }
 
-        # Generate ULID
-        item_id = str(ULID())
+        # Generate unique ID (UUID instead of ULID)
+        item_id = str(uuid.uuid4())
 
-        # Put into DynamoDB
+        # Insert into DynamoDB
         table.put_item(Item={
             "item_id": item_id,
             "item_name": item_name,
