@@ -1,1 +1,3 @@
 project inventory app
+
+ALL THE FUNCTIONS ARE WORKING AS EXPECTED.
