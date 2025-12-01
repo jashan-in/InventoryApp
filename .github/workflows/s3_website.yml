@@ -24,4 +24,4 @@ jobs:
 
       - name: Upload index.html to S3
         run: |
-          aws s3 cp website/index.html s3://inventory-app-jashanpreetsingh-2025/index.html --acl public-read
+          aws s3 cp website/index.html s3://inventory-app-jashanpreetsingh-2025/index.html
