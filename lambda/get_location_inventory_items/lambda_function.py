@@ -1,31 +1,29 @@
-import json
 import boto3
-from boto3.dynamodb.conditions import Attr
 import json
+from boto3.dynamodb.conditions import Key
 from decimal import Decimal
 
 def decimal_converter(o):
     if isinstance(o, Decimal):
         return float(o)
 
-
 dynamodb = boto3.resource("dynamodb")
 table = dynamodb.Table("Inventory")
 
 def lambda_handler(event, context):
     try:
-        location_id = int(event["pathParameters"]["id"])
+        # Get location id from URL path
+        location_id = event["pathParameters"]["id"]
 
-        # Scan and filter by sort key
-        response = table.scan(
-            FilterExpression=Attr("item_location_id").eq(location_id)
+        # Query using the GSI
+        response = table.query(
+            IndexName="location-index",
+            KeyConditionExpression=Key("item_location_id").eq(location_id)
         )
-
-        items = response.get("Items", [])
 
         return {
             "statusCode": 200,
-            "body": json.dumps(items, default=decimal_converter)
+            "body": json.dumps(response["Items"], default=decimal_converter)
         }
 
     except Exception as e:
