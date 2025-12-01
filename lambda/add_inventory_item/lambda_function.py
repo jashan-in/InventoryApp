@@ -1,40 +1,39 @@
-import json
 import boto3
-import uuid
+import json
+from decimal import Decimal
+import ulid
 
-dynamodb = boto3.resource('dynamodb')
-table = dynamodb.Table('Inventory')
+dynamodb = boto3.resource("dynamodb")
+table = dynamodb.Table("Inventory")
 
 def lambda_handler(event, context):
     try:
-        # Parse JSON body
-        body = json.loads(event.get("body", "{}"))
+        body = json.loads(event["body"])
 
-        item_name = body.get("item_name")
-        item_description = body.get("item_description")
-        item_qty_on_hand = body.get("item_qty_on_hand")
-        item_price = body.get("item_price")
-        item_location_id = body.get("item_location_id")
-
-        # Validate required fields
-        if not all([item_name, item_description, item_qty_on_hand, item_price, item_location_id]):
+        required = ["item_name", "item_description", "item_qty_on_hand", "item_price", "item_location_id"]
+        if not all(field in body for field in required):
             return {
                 "statusCode": 400,
                 "body": json.dumps({"error": "Missing required fields"})
             }
 
-        # Generate unique ID (UUID instead of ULID)
-        item_id = str(uuid.uuid4())
+        # Convert all numeric fields to Decimal
+        item_qty = Decimal(str(body["item_qty_on_hand"]))
+        item_price = Decimal(str(body["item_price"]))
+        item_loc = Decimal(str(body["item_location_id"]))
 
-        # Insert into DynamoDB
-        table.put_item(Item={
+        item_id = str(ulid.new())
+
+        item = {
             "item_id": item_id,
-            "item_name": item_name,
-            "item_description": item_description,
-            "item_qty_on_hand": int(item_qty_on_hand),
-            "item_price": float(item_price),
-            "item_location_id": int(item_location_id)
-        })
+            "item_name": body["item_name"],
+            "item_description": body["item_description"],
+            "item_qty_on_hand": item_qty,
+            "item_price": item_price,
+            "item_location_id": item_loc
+        }
+
+        table.put_item(Item=item)
 
         return {
             "statusCode": 200,
